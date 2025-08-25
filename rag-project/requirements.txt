@@ -1,0 +1,9 @@
+langchain-google-vertexai
+langchain
+scikit-learn
+unstructured[pdf]
+pypdf
+requests
+numpy
+langchain-community
+langchain-core

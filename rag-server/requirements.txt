@@ -1,0 +1,17 @@
+
+langchain-google-vertexai
+
+langchain
+
+scikit-learn
+
+google-cloud-storage
+
+langchain-community
+
+langchain-core
+
+functions-framework
+
+numpy
+

@@ -1,0 +1,12 @@
+# Python virtual environments
+**/venv/
+**/ui-env/
+
+# Python cache
+**/__pycache__/
+*.pyc
+
+# Local data files
+*.pkl
+*.zip
+*.pdf
