@@ -183,3 +183,4 @@ gcloud storage rm -r gs://rag-data-bucket-$(gcloud config get-value project)
 
 # Delete the Vertex AI Workbench instance and firewall rule from the Cloud Console
 ```
+
