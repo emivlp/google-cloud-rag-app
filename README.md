@@ -24,9 +24,12 @@ This project follows a professional MLOps workflow by separating the computation
 ```mermaid
 flowchart TD
     subgraph "Phase 1: Indexing Job (One-Time)"
-        A[1. Source PDF] --> B{2. Generate Summaries <br/>(Gemini 2.5 Flash)};
-        B --> C{3. Create Embeddings <br/>(Gemini Embedding)};
-        C --> D[4. Save Index Files <br/>(vectorstore.pkl, texts.pkl)];
+        A["1. Source PDF"] --> B["2. Generate Summaries
+        (Gemini 2.5 Flash)"];
+        B --> C["3. Create Embeddings
+        (Gemini Embedding)"];
+        C --> D["4. Save Index Files
+        (vectorstore.pkl, texts.pkl)"];
     end
 
     subgraph "Cloud Storage"
@@ -35,11 +38,14 @@ flowchart TD
 
     subgraph "Phase 2: Live Application"
         F[User Query] --> G{Streamlit UI};
-        G --> H[Cloud Run API <br/>(main.py)];
+        G --> H["Cloud Run API
+        (main.py)"];
         H -->|Loads on Cold Start| E;
-        H -->|Queries Index| I[In-Memory <br/>SKLearnVectorStore];
+        H -->|Queries Index| I["In-Memory
+        SKLearnVectorStore"];
         I --> J[Relevant Context];
-        J -- User Query --> K{Final Answer Generation <br/>(Gemini 2.5 Pro)};
+        J -- User Query --> K["Final Answer Generation
+        (Gemini 2.5 Pro)"];
         K --> H;
         H -->|Response| G;
     end
@@ -47,6 +53,39 @@ flowchart TD
     D --> E;
 ```
 ---
+
+## 🔬 Project Deep Dive: Concepts and Decisions
+
+This section provides a more detailed explanation of the key technical decisions and patterns used in this project.
+
+### Why Retrieval-Augmented Generation (RAG)?
+
+Instead of relying solely on the LLM's pre-trained knowledge, RAG provides a way to ground the model's responses in specific, factual data. This is analogous to giving an expert an **open book** during an exam instead of asking them to work from memory alone.
+
+This approach has several key advantages:
+-   **Reduces Hallucinations:** By providing relevant context with every query, the model is guided to generate answers based on the source material, significantly reducing the chance of inventing information.
+-   **Enables Domain-Specific Knowledge:** It allows the LLM to answer questions about private, proprietary, or very recent documents it has never seen before.
+-   **Increases Trust and Verifiability:** Since the context used to generate the answer can be traced, users can verify the source of the information.
+
+### The Two-Part Architecture: Solving the "Cold Start" Problem
+
+A major challenge in deploying serverless applications is the **"cold start."** When a new instance starts up, it has a very short time limit to initialize and respond to a health check.
+
+Our initial development attempts failed because we tried to do all the heavy data processing inside the serving application's startup routine:
+1.  Download the PDF.
+2.  Generate 15+ summaries via API calls.
+3.  Generate 15+ embeddings via API calls.
+4.  Build a search index.
+
+This workload was too intensive for a fast startup. The definitive solution was to adopt a professional two-part architecture:
+
+1.  **The Indexing Job (`build_index.py`):** An offline, one-time script that performs all the heavy data processing and saves the final, queryable index to Google Cloud Storage.
+2.  **The Serving App (`main.py`):** A lightweight, fast-starting application whose only job is to download the small, pre-built index files from GCS and serve requests.
+
+This separation is a standard and robust pattern for deploying production-ready machine learning systems.
+
+---
+
 ## 📁 Project Structure
 
 The repository is organized into distinct components, each with a specific responsibility.
